@@ -21,3 +21,13 @@ type UpdatePasswordRequest struct {
 	NewPassword     string `json:"password_new" validate:"required,min=8"`
 	ConfirmPassword string `json:"password_confirmation" validate:"required,min=8"`
 }
+
+type UpdateDataUserRequest struct {
+	Name    string  `json:"name" validate:"required"`
+	Email   string  `json:"email" validate:"required,email"`
+	Phone   int64   `json:"phone" validate:"required,number"`
+	Address string  `json:"address" validate:"required"`
+	Lat     float64 `json:"lat" validate:"required"`
+	Lng     float64 `json:"lng" validate:"required"`
+	Photo   string  `json:"photo" validate:"required"`
+}
