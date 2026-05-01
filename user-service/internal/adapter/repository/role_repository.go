@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-
 	"user-service/internal/core/domain/entity"
 	"user-service/internal/core/domain/model"
 
@@ -23,11 +22,12 @@ type roleRepository struct {
 	db *gorm.DB
 }
 
-// Create implements [RoleRepositoryInterface].
+// Create implements RoleRepositoryInterface.
 func (r *roleRepository) Create(ctx context.Context, req entity.RoleEntity) error {
 	modelRole := model.Role{
 		Name: req.Name,
 	}
+
 	if err := r.db.Create(&modelRole).Error; err != nil {
 		log.Errorf("[RoleRepository-1] Create: %v", err)
 		return err
@@ -36,14 +36,14 @@ func (r *roleRepository) Create(ctx context.Context, req entity.RoleEntity) erro
 	return nil
 }
 
-// Delete implements [RoleRepositoryInterface].
+// Delete implements RoleRepositoryInterface.
 func (r *roleRepository) Delete(ctx context.Context, id int64) error {
 	modelRole := model.Role{}
 
 	if err := r.db.Where("id = ?", id).Preload("Users").First(&modelRole).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			err := errors.New("404")
-			log.Infof("[RoleRepository-1] Delete: No Role Found")
+			err = errors.New("404")
+			log.Infof("[RoleRepository-1] Delete: Role not found")
 			return err
 		}
 		log.Errorf("[RoleRepository-2] Delete: %v", err)
@@ -52,19 +52,19 @@ func (r *roleRepository) Delete(ctx context.Context, id int64) error {
 
 	if len(modelRole.Users) > 0 {
 		err := errors.New("400")
-		log.Infof("[RoleRepository-3] Delete: Cannot delete role that is used by some users")
+		log.Infof("[RoleRepository-3] Delete: Role is associated with users")
 		return err
 	}
 
 	if err := r.db.Delete(&modelRole).Error; err != nil {
-		log.Errorf("[RoleRepository-4] Delete: %v", err)
+		log.Errorf("[RoleRepository-3] Delete: %v", err)
 		return err
 	}
 
 	return nil
 }
 
-// GetAll implements [RoleRepositoryInterface].
+// GetAll implements RoleRepositoryInterface.
 func (r *roleRepository) GetAll(ctx context.Context, search string) ([]entity.RoleEntity, error) {
 	modelRoles := []model.Role{}
 
@@ -75,32 +75,32 @@ func (r *roleRepository) GetAll(ctx context.Context, search string) ([]entity.Ro
 
 	if len(modelRoles) == 0 {
 		err := errors.New("404")
-		log.Infof("[RoleRepository-2] GetAll: No Role Found")
+		log.Infof("[RoleRepository-2] GetAll: No role found")
 		return nil, err
 	}
 
-	entityRoles := []entity.RoleEntity{}
+	entityRole := []entity.RoleEntity{}
 	for _, modelRole := range modelRoles {
-		entityRoles = append(entityRoles, entity.RoleEntity{
+		entityRole = append(entityRole, entity.RoleEntity{
 			ID:   modelRole.ID,
 			Name: modelRole.Name,
 		})
 	}
 
-	return entityRoles, nil
+	return entityRole, nil
 }
 
-// GetByID implements [RoleRepositoryInterface].
+// GetByID implements RoleRepositoryInterface.
 func (r *roleRepository) GetByID(ctx context.Context, id int64) (*entity.RoleEntity, error) {
 	modelRole := model.Role{}
 
 	if err := r.db.Where("id = ?", id).First(&modelRole).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			err := errors.New("404")
-			log.Infof("[RoleRepository-1] GetByID: No Role Found")
+			err = errors.New("404")
+			log.Infof("[RoleRepository-1] GetByID: Role not found")
 			return nil, err
 		}
-		log.Errorf("[RoleRepository-2] GetByID: %v", err)
+		log.Errorf("[RoleRepository-2] GetAll: %v", err)
 		return nil, err
 	}
 
@@ -110,23 +110,23 @@ func (r *roleRepository) GetByID(ctx context.Context, id int64) (*entity.RoleEnt
 	}, nil
 }
 
-// Update implements [RoleRepositoryInterface].
+// Update implements RoleRepositoryInterface.
 func (r *roleRepository) Update(ctx context.Context, req entity.RoleEntity) error {
-	modelRole := model.Role{}
+	modelRole := model.Role{
+		Name: req.Name,
+	}
 
 	if err := r.db.Where("id = ?", req.ID).First(&modelRole).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			err := errors.New("404")
-			log.Infof("[RoleRepository-1] Update: No Role Found")
+			err = errors.New("404")
+			log.Infof("[RoleRepository-1] Update: Role not found")
 			return err
 		}
 		log.Errorf("[RoleRepository-2] Update: %v", err)
 		return err
 	}
 
-	modelRole.Name = req.Name
-
-	if err := r.db.Save(&modelRole).Error; err != nil {
+	if err := r.db.Save(modelRole).Error; err != nil {
 		log.Errorf("[RoleRepository-3] Update: %v", err)
 		return err
 	}

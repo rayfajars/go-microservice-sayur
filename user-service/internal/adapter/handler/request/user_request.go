@@ -1,33 +1,33 @@
 package request
 
 type SignInRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8"`
+	Email    string `json:"email" validate:"email,required"`
+	Password string `json:"password" validate:"min=8,required"`
 }
 
 type SignUpRequest struct {
 	Name                 string `json:"name" validate:"required"`
-	Email                string `json:"email" validate:"required,email"`
+	Email                string `json:"email" validate:"email,required"`
 	Password             string `json:"password" validate:"required,min=8"`
 	PasswordConfirmation string `json:"password_confirmation" validate:"required,min=8"`
 }
 
 type ForgotPasswordRequest struct {
-	Email string `json:"email" validate:"required,email"`
+	Email string `json:"email" validate:"email,required"`
 }
 
 type UpdatePasswordRequest struct {
 	CurrentPassword string `json:"password,omitempty"`
-	NewPassword     string `json:"password_new" validate:"required,min=8"`
-	ConfirmPassword string `json:"password_confirmation" validate:"required,min=8"`
+	NewPassword     string `json:"password_new" validate:"required"`
+	ConfirmPassword string `json:"password_confirmation" validate:"required"`
 }
 
 type UpdateDataUserRequest struct {
-	Name    string  `json:"name" validate:"required"`
-	Email   string  `json:"email" validate:"required,email"`
-	Phone   int64   `json:"phone" validate:"required,number"`
-	Address string  `json:"address" validate:"required"`
-	Lat     float64 `json:"lat" validate:"required"`
-	Lng     float64 `json:"lng" validate:"required"`
-	Photo   string  `json:"photo" validate:"required"`
+	Name    string `json:"name" validate:"required"`
+	Email   string `json:"email" validate:"email,required"`
+	Phone   string `json:"phone" validate:"required"`
+	Address string `json:"address" validate:"required"`
+	Lat     string `json:"lat" validate:"required"`
+	Lng     string `json:"lng" validate:"required"`
+	Photo   string `json:"photo" validate:"required"`
 }
