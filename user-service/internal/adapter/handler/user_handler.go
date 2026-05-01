@@ -452,7 +452,6 @@ func NewUserHandler(e *echo.Echo, userService service.UserServiceInterface, cfg 
 
 	mid := adapter.NewMiddlewareAdapter(cfg, jwtService)
 	adminGroup := e.Group("/admin", mid.CheckToken())
-	adminGroup.GET("/profile", userHandler.GetProfileUser)
 	adminGroup.GET("/check", func(c echo.Context) error {
 		// return c.JSON(http.StatusOK, response.DefaultResponse{
 		// 	Message: "Success",
@@ -465,6 +464,7 @@ func NewUserHandler(e *echo.Echo, userService service.UserServiceInterface, cfg 
 	// auth group
 
 	authGroup := e.Group("/auth", mid.CheckToken())
+	authGroup.GET("/profile", userHandler.GetProfileUser)
 	authGroup.PUT("/profile", userHandler.UpdateDataUser)
 
 	return userHandler

@@ -117,6 +117,7 @@ func (u *userService) VerifyToken(ctx context.Context, token string) (*entity.Us
 		"logged_in":  true,
 		"created_at": time.Now().String(),
 		"token":      token,
+		"role_name":  user.RoleName,
 	}
 
 	jsonData, err := json.Marshal(sessionData)
@@ -226,6 +227,7 @@ func (u *userService) SignIn(ctx context.Context, req entity.UserEntity) (*entit
 		"logged_in":  true,
 		"created_at": time.Now().String(),
 		"token":      token,
+		"role_name":  user.RoleName,
 	}
 
 	jsonData, err := json.Marshal(sessionData)
