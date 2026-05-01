@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"user-service/config"
@@ -195,7 +194,7 @@ func (u *userHandler) UpdateCustomer(c echo.Context) error {
 	if req.Lng != 0 {
 		lngString = strconv.FormatFloat(req.Lng, 'g', -1, 64)
 	}
-	phoneString := fmt.Sprintf("%d", req.Phone)
+	phoneString := req.Phone
 
 	idParamStr := c.Param("id")
 	if idParamStr == "" {
@@ -223,9 +222,10 @@ func (u *userHandler) UpdateCustomer(c echo.Context) error {
 		Lat:      latString,
 		Lng:      lngString,
 		Photo:    req.Photo,
+		RoleID:   req.RoleID,
 	}
 
-	err = u.userService.UpdateDataUser(ctx, reqEntity)
+	err = u.userService.UpdateCustomer(ctx, reqEntity)
 	if err != nil {
 		log.Errorf("[UserHandler-6] UpdateCustomer: %v", err)
 		if err.Error() == "404" {
@@ -436,7 +436,7 @@ func (u *userHandler) UpdateDataUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, resp)
 	}
 
-	phoneString := fmt.Sprintf("%d", req.Phone)
+	phoneString := req.Phone
 
 	reqEntity := entity.UserEntity{
 		ID:      userID,

@@ -356,9 +356,9 @@ func NewRoleHandler(e *echo.Echo, roleService service.RoleServiceInterface, cfg 
 	adminGroup := e.Group("/admin", mid.CheckToken())
 	adminGroup.GET("/roles", role.GetAll)
 	adminGroup.POST("/roles", role.Create)
-	adminGroup.PUT("/roles/{id}", role.Update)
-	adminGroup.DELETE("/roles/{id}", role.Delete)
-	adminGroup.GET("/roles/{id}", role.GetByID)
+	adminGroup.GET("/roles/:id", role.GetByID)
+	adminGroup.PUT("/roles/:id", role.Update)
+	adminGroup.DELETE("/roles/:id", role.Delete)
 
 	return role
 }

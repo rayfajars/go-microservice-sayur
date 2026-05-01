@@ -58,7 +58,11 @@ func (u *userRepository) UpdateCustomer(ctx context.Context, req entity.UserEnti
 	modelRole := model.Role{}
 
 	if err := u.db.Where("id =?", req.RoleID).First(&modelRole).Error; err != nil {
-		log.Fatalf("[UserRepository-1] UpdateCustomer: %v", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Infof("[UserRepository-1] UpdateCustomer: Role not found")
+			return errors.New("404")
+		}
+		log.Errorf("[UserRepository-1] UpdateCustomer: %v", err)
 		return err
 	}
 
@@ -89,7 +93,7 @@ func (u *userRepository) UpdateCustomer(ctx context.Context, req entity.UserEnti
 		modelUser.Lng = req.Lng
 	}
 	if req.Photo != "" {
-		modelUser.Lat = req.Lat
+		modelUser.Photo = req.Photo
 	}
 
 	if req.Password != "" {
