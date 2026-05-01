@@ -6,6 +6,7 @@ type UserEntity struct {
 	Email      string
 	Password   string
 	RoleName   string
+	RoleID     int64
 	Address    string
 	Lat        string
 	Lng        string
@@ -13,4 +14,12 @@ type UserEntity struct {
 	Photo      string
 	IsVerified bool
 	Token      string
+}
+
+type QueryStringCustomer struct {
+	Search    string
+	Page      int64
+	Limit     int64
+	OrderBy   string
+	OrderType string
 }

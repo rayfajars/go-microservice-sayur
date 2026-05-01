@@ -12,6 +12,8 @@ import (
 	"user-service/internal/core/domain/entity"
 	"user-service/internal/core/service"
 
+	"user-service/utils/conv"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
@@ -25,10 +27,164 @@ type UserHandlerInterface interface {
 	UpdatePassword(c echo.Context) error
 	GetProfileUser(c echo.Context) error
 	UpdateDataUser(c echo.Context) error
+
+	// customer admin all
+	GetCustomerAll(c echo.Context) error
+	GetCustomerByID(c echo.Context) error
 }
 
 type userHandler struct {
 	userService service.UserServiceInterface
+}
+
+// GetCustomerByID implements [UserHandlerInterface].
+func (u *userHandler) GetCustomerByID(c echo.Context) error {
+	var (
+		resp     = response.DefaultResponseWithPaginations{}
+		ctx      = c.Request().Context()
+		respUser = response.CustomerResponse{}
+	)
+
+	user := c.Get("user").(string)
+	if user == "" {
+		log.Errorf("[UserHandler-1] GetCustomerByID: %s", "data token not found")
+		resp.Message = "data token not valid"
+		resp.Data = nil
+		return c.JSON(http.StatusUnauthorized, resp)
+	}
+
+	idParam := c.Param("id")
+	if idParam == "" {
+		log.Errorf("[UserHandler-2] GetCustomerByID: %s", "id invalid")
+		resp.Message = "id invalid"
+		resp.Data = nil
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+
+	id, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		log.Errorf("[UserHandler-3] GetCustomerByID: %v", err)
+		resp.Message = err.Error()
+		resp.Data = nil
+		return c.JSON(http.StatusBadRequest, resp)
+	}
+
+	result, err := u.userService.GetCustomerByID(ctx, id)
+	if err != nil {
+		log.Errorf("[UserHandler-4] GetCustomerByID: %v", err)
+		if err.Error() == "404" {
+			resp.Message = "Customer not found"
+			resp.Data = nil
+			return c.JSON(http.StatusNotFound, resp)
+		}
+		resp.Message = err.Error()
+		resp.Data = nil
+		return c.JSON(http.StatusInternalServerError, resp)
+	}
+
+	resp.Message = "success get customer by id"
+	respUser.ID = result.ID
+	respUser.RoleID = result.RoleID
+	respUser.Name = result.Name
+	respUser.Email = result.Email
+	respUser.Phone = result.Phone
+	respUser.Address = result.Address
+	respUser.Photo = result.Photo
+	respUser.Lat = result.Lat
+	respUser.Lng = result.Lng
+
+	resp.Data = respUser
+	resp.Pagination = nil
+
+	return c.JSON(http.StatusOK, resp)
+}
+
+// GetCustomerAll implements [UserHandlerInterface].
+func (u *userHandler) GetCustomerAll(c echo.Context) error {
+	var (
+		resp     = response.DefaultResponseWithPaginations{}
+		ctx      = c.Request().Context()
+		respUser = []response.CustomerListResponse{}
+	)
+
+	user := c.Get("user").(string)
+	if user == "" {
+		log.Errorf("[UserHandler-1] GetCustomerAll: %s", "data token not found")
+		resp.Message = "data token not found"
+		resp.Data = nil
+		return c.JSON(http.StatusNotFound, resp)
+	}
+
+	search := c.QueryParam("search")
+	orderBy := "created_at"
+	if c.QueryParam("order_by") != "" {
+		orderBy = c.QueryParam("order_by")
+	}
+
+	orderType := c.QueryParam("order_type")
+	if orderType != "asc" && orderType != "desc" {
+		orderType = "desc"
+	}
+
+	pageStr := c.QueryParam("page")
+	var page int64 = 1
+	if pageStr != "" {
+		page, _ = conv.StringToInt64(pageStr)
+		if page <= 0 {
+			page = 1
+		}
+	}
+
+	limitStr := c.QueryParam("limit")
+	var limit int64 = 10
+	if limitStr != "" {
+		limit, _ = conv.StringToInt64(limitStr)
+		if limit <= 0 {
+			limit = 10
+		}
+	}
+
+	reqEntity := entity.QueryStringCustomer{
+		Search:    search,
+		Page:      page,
+		Limit:     limit,
+		OrderBy:   orderBy,
+		OrderType: orderType,
+	}
+
+	results, countData, totalPages, err := u.userService.GetCustomerAll(ctx, reqEntity)
+	if err != nil {
+		log.Errorf("[UserHandler-2] GetCustomerAll: %v", err)
+		if err.Error() == "404" {
+			resp.Message = "Data not found"
+			resp.Data = nil
+			return c.JSON(http.StatusNotFound, resp)
+		}
+		resp.Message = err.Error()
+		resp.Data = nil
+		return c.JSON(http.StatusInternalServerError, resp)
+	}
+
+	for _, val := range results {
+		respUser = append(respUser, response.CustomerListResponse{
+			ID:    val.ID,
+			Name:  val.Name,
+			Email: val.Email,
+			Photo: val.Photo,
+			Phone: val.Phone,
+		})
+	}
+
+	resp.Message = "Data retrieved successfully"
+	resp.Data = respUser
+	resp.Pagination = &response.Pagination{
+		Page:       page,
+		TotalCount: countData,
+		PerPage:    limit,
+		TotalPage:  totalPages,
+	}
+
+	return c.JSON(http.StatusOK, resp)
 }
 
 // UpdateDataUser implements [UserHandlerInterface].
@@ -460,6 +616,8 @@ func NewUserHandler(e *echo.Echo, userService service.UserServiceInterface, cfg 
 
 		return c.String(200, "OK")
 	})
+	adminGroup.GET("/customers", userHandler.GetCustomerAll)
+	adminGroup.GET("/customers/:id", userHandler.GetCustomerByID)
 
 	// auth group
 
